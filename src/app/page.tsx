@@ -43,6 +43,7 @@ export default function Home() {
 
   // Keyboard shortcut: Ctrl/Cmd + P triggers print settings modal
   useEffect(() => {
+    document.body.classList.add("print-deconstruct-diagrams");
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") {
         e.preventDefault();
@@ -126,6 +127,14 @@ export default function Home() {
     rootStyle.setProperty("--print-diagram-scale", diagramScaleMap[settings.diagramScale]);
     rootStyle.setProperty("--print-diagram-max-height", diagramHeightMap[settings.diagramScale]);
     rootStyle.setProperty("--print-page-margin", marginMap[settings.margin]);
+
+    if (settings.diagramLayout === "deconstruct") {
+      document.body.classList.add("print-deconstruct-diagrams");
+      document.body.classList.remove("print-monolithic-diagrams");
+    } else {
+      document.body.classList.remove("print-deconstruct-diagrams");
+      document.body.classList.add("print-monolithic-diagrams");
+    }
 
     // Dynamically inject @page size rule into head before window.print
     let printStyleEl = document.getElementById("mdfy-print-page-style") as HTMLStyleElement | null;

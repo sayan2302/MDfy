@@ -1,10 +1,23 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useId } from "react";
+import React, { useEffect, useRef, useState, useId, useMemo } from "react";
 import mermaid from "mermaid";
-import { Maximize2, ZoomIn, ZoomOut, RotateCcw, Download, AlertTriangle, Image as ImageIcon, FileText } from "lucide-react";
+import {
+  Maximize2,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
+  Download,
+  AlertTriangle,
+  Image as ImageIcon,
+  FileText,
+  Layers,
+  BookOpen,
+} from "lucide-react";
 import { DiagramModal } from "./DiagramModal";
 import { exportDiagramToPdf } from "@/utils/exportDiagramPdf";
+import { deconstructMermaid } from "@/utils/deconstructMermaid";
+import { RenderedMermaidPlate } from "./RenderedMermaidPlate";
 
 interface MermaidBlockProps {
   chart: string;
@@ -22,6 +35,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [showCtrlHint, setShowCtrlHint] = useState(false);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [activeTab, setActiveTab] = useState<"canvas" | "chapters">("canvas");
   const hintTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scaleRef = useRef(scale);
@@ -33,6 +47,9 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
   const reactId = useId().replace(/:/g, "_");
   const uniqueIdRef = useRef<string>("mermaid_" + reactId);
   const uniqueId = uniqueIdRef.current;
+
+  // Compute Subgraph Deconstruction ("Executive Map + Detailed Tier Chapters")
+  const deconstructed = useMemo(() => deconstructMermaid(chart), [chart]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -84,7 +101,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
     return () => {
       isCurrent = false;
     };
-  }, [chart, isMounted, theme]);
+  }, [chart, isMounted, theme, uniqueId]);
 
   // Non-passive wheel event listener to strictly block native browser zoom on Ctrl+Wheel
   useEffect(() => {
@@ -211,12 +228,12 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
     img.src = url;
   };
 
-  const handleDownloadPdf = async () => {
+  const handleDownloadPdf = () => {
     try {
       setIsExportingPdf(true);
-      await exportDiagramToPdf(svgHtml, "mermaid-architecture");
+      exportDiagramToPdf(svgHtml, "mermaid-architecture");
     } catch (err) {
-      console.error("PDF export failed:", err);
+      console.error("PDF Blueprint export failed:", err);
     } finally {
       setIsExportingPdf(false);
     }
@@ -240,9 +257,70 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
 
   return (
     <>
-      <div className="mermaid-wrapper">
+      <div className={`mermaid-wrapper ${deconstructed.isDeconstructible ? "mermaid-has-deconstruction" : ""}`}>
+        {/* Header Toolbar */}
         <div className="mermaid-header-bar no-print">
-          <span className="mermaid-badge">Mermaid Diagram</span>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span className="mermaid-badge">Mermaid Diagram</span>
+
+            {/* Approach 1: Subgraph Deconstruction Switcher (for multi-tier diagrams) */}
+            {deconstructed.isDeconstructible && (
+              <div
+                style={{
+                  display: "flex",
+                  gap: "2px",
+                  background: "var(--bg-tertiary)",
+                  padding: "2px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--border-subtle)",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("canvas")}
+                  title="Interactive Pan & Zoom Canvas"
+                  style={{
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    fontSize: "0.72rem",
+                    fontWeight: 600,
+                    background: activeTab === "canvas" ? "var(--bg-primary)" : "transparent",
+                    color: activeTab === "canvas" ? "var(--accent-primary)" : "var(--text-secondary)",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <Layers size={12} /> Canvas View
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("chapters")}
+                  title="Preview Executive Map & Detailed Tier Chapters"
+                  style={{
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    fontSize: "0.72rem",
+                    fontWeight: 600,
+                    background: activeTab === "chapters" ? "var(--bg-primary)" : "transparent",
+                    color: activeTab === "chapters" ? "var(--accent-primary)" : "var(--text-secondary)",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <BookOpen size={12} /> Tier Chapters ({deconstructed.chapters.length})
+                </button>
+              </div>
+            )}
+          </div>
+
           <div className="mermaid-actions">
             <button className="diagram-btn" onClick={handleDownloadSvg} title="Export as SVG">
               <Download size={13} style={{ marginRight: 4 }} /> SVG
@@ -254,7 +332,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
               className="diagram-btn"
               onClick={handleDownloadPdf}
               disabled={isExportingPdf}
-              title="Export as Standalone Vector Blueprint PDF (Custom Size, No A4 Squeezing)"
+              title="Export as Standalone Vector Blueprint PDF (420x297mm A3 Blueprint Canvas)"
               style={{
                 background: "var(--accent-glow)",
                 borderColor: "var(--accent-primary)",
@@ -278,88 +356,185 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
           </div>
         </div>
 
-        <div
-          className="mermaid-viewport"
-          ref={containerRef}
-          style={{
-            cursor: isDragging ? "grabbing" : "grab",
-            position: "relative",
-            overflow: "hidden",
-          }}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-        >
+        {/* 1. On-Screen Interactive View */}
+        {activeTab === "canvas" ? (
           <div
+            className="mermaid-viewport"
+            ref={containerRef}
             style={{
-              transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
-              transformOrigin: "center center",
-              transition: isDragging ? "none" : "transform 0.1s ease-out",
-              width: "100%",
-              display: "flex",
-              justifyContent: "center",
-              userSelect: "none",
+              cursor: isDragging ? "grabbing" : "grab",
+              position: "relative",
+              overflow: "hidden",
             }}
-            dangerouslySetInnerHTML={{ __html: svgHtml }}
-          />
-
-          {/* Quick Smart-Scroll Hint Toast */}
-          {showCtrlHint && (
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
             <div
               style={{
-                position: "absolute",
-                top: "1rem",
-                left: "50%",
-                transform: "translateX(-50%)",
-                background: "rgba(15, 23, 42, 0.92)",
-                color: "#ffffff",
-                padding: "0.4rem 0.85rem",
-                borderRadius: "20px",
-                fontSize: "0.75rem",
-                fontWeight: 600,
-                pointerEvents: "none",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.35)",
-                zIndex: 20,
-                animation: "modalFadeIn 0.15s ease-out",
+                transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                transformOrigin: "center center",
+                transition: isDragging ? "none" : "transform 0.1s ease-out",
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                userSelect: "none",
               }}
-            >
-              💡 Hold <kbd style={{ background: "rgba(255,255,255,0.2)", padding: "2px 5px", borderRadius: "4px" }}>Ctrl</kbd> + Scroll to zoom diagram
-            </div>
-          )}
+              dangerouslySetInnerHTML={{ __html: svgHtml }}
+            />
 
-          {/* Floating Pan/Zoom Control HUD */}
-          <div className="floating-controls no-print">
-            <span
+            {/* Quick Smart-Scroll Hint Toast */}
+            {showCtrlHint && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "1rem",
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  background: "rgba(15, 23, 42, 0.92)",
+                  color: "#ffffff",
+                  padding: "0.4rem 0.85rem",
+                  borderRadius: "20px",
+                  fontSize: "0.75rem",
+                  fontWeight: 600,
+                  pointerEvents: "none",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.35)",
+                  zIndex: 20,
+                  animation: "modalFadeIn 0.15s ease-out",
+                }}
+              >
+                💡 Hold <kbd style={{ background: "rgba(255,255,255,0.2)", padding: "2px 5px", borderRadius: "4px" }}>Ctrl</kbd> + Scroll to zoom diagram
+              </div>
+            )}
+
+            {/* Floating Pan/Zoom Control HUD */}
+            <div className="floating-controls no-print">
+              <span
+                style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 650,
+                  color: "var(--text-secondary)",
+                  padding: "0 0.35rem",
+                  fontFamily: "var(--font-mono)",
+                }}
+              >
+                {Math.round(scale * 100)}%
+              </span>
+              <button className="ctrl-btn" onClick={handleZoomIn} title="Zoom In">
+                <ZoomIn size={14} />
+              </button>
+              <button className="ctrl-btn" onClick={handleZoomOut} title="Zoom Out">
+                <ZoomOut size={14} />
+              </button>
+              <button className="ctrl-btn" onClick={handleResetZoom} title="Reset Pan & Zoom">
+                <RotateCcw size={14} />
+              </button>
+              <button
+                className="ctrl-btn"
+                onClick={() => setIsModalOpen(true)}
+                title="Open Fullscreen Infinite Canvas Studio"
+                style={{ color: "var(--accent-primary)" }}
+              >
+                <Maximize2 size={14} />
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Interactive Chapters Screen View */
+          <div
+            className="mermaid-chapters-screen-view no-print"
+            style={{
+              padding: "1rem",
+              display: "flex",
+              flexDirection: "column",
+              gap: "1.25rem",
+              background: "var(--bg-primary)",
+            }}
+          >
+            <div
               style={{
-                fontSize: "0.72rem",
-                fontWeight: 650,
-                color: "var(--text-secondary)",
-                padding: "0 0.35rem",
-                fontFamily: "var(--font-mono)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "0.6rem 0.85rem",
+                background: "rgba(2, 132, 199, 0.08)",
+                borderRadius: "8px",
+                border: "1px solid rgba(2, 132, 199, 0.2)",
               }}
             >
-              {Math.round(scale * 100)}%
-            </span>
-            <button className="ctrl-btn" onClick={handleZoomIn} title="Zoom In">
-              <ZoomIn size={14} />
-            </button>
-            <button className="ctrl-btn" onClick={handleZoomOut} title="Zoom Out">
-              <ZoomOut size={14} />
-            </button>
-            <button className="ctrl-btn" onClick={handleResetZoom} title="Reset Pan & Zoom">
-              <RotateCcw size={14} />
-            </button>
-            <button
-              className="ctrl-btn"
-              onClick={() => setIsModalOpen(true)}
-              title="Open Fullscreen Infinite Canvas Studio"
-              style={{ color: "var(--accent-primary)" }}
-            >
-              <Maximize2 size={14} />
-            </button>
+              <div style={{ fontSize: "0.8rem", color: "var(--text-secondary)" }}>
+                🏛️ <strong style={{ color: "var(--accent-primary)" }}>Approach 1 (Active):</strong> In PDF document export, this multi-tier architecture automatically prints as an Executive Overview Map followed by dedicated 100% vector scale tier chapters.
+              </div>
+            </div>
+
+            {/* Executive Map Plate */}
+            <RenderedMermaidPlate
+              plateId={`${reactId}_exec_screen`}
+              code={deconstructed.executiveMapCode}
+              theme={theme}
+              title="🏛️ System Architecture — Executive Overview Map"
+              subtitle="Abstracted high-level topology connecting all primary architectural domains and subgraphs"
+              badge="Executive Map"
+            />
+
+            {/* Each Chapter Plate */}
+            {deconstructed.chapters.map((ch, idx) => (
+              <RenderedMermaidPlate
+                key={ch.id}
+                plateId={`${reactId}_ch_${idx}_screen`}
+                code={ch.code}
+                theme={theme}
+                title={`📖 Chapter ${idx + 1}: ${ch.title}`}
+                subtitle="Dedicated Architecture Subgraph Deep-Dive · Full 100% Vector Scale"
+                badge={`Layer ${idx + 1}`}
+              />
+            ))}
           </div>
-        </div>
+        )}
+
+        {/* 2. Deconstructed Print Suite (Cleanly formatted for @media print) */}
+        {deconstructed.isDeconstructible && (
+          <div className="mermaid-deconstructed-print-suite">
+            {/* Executive Overview Map Plate */}
+            <div className="executive-map-plate">
+              <div className="tier-chapter-header">
+                <span className="tier-chapter-title">🏛️ System Architecture — Executive Overview Map</span>
+                <span className="tier-chapter-badge">Executive Map</span>
+              </div>
+              <div className="tier-chapter-subtitle" style={{ marginBottom: "0.75rem", fontSize: "8.5pt", color: "#64748b" }}>
+                High-level multi-tier schematic. Detailed deep-dive chapters for Layers 1 through {deconstructed.chapters.length} follow on subsequent pages at 100% vector scale.
+              </div>
+              <RenderedMermaidPlate
+                plateId={`${reactId}_exec_print`}
+                code={deconstructed.executiveMapCode}
+                theme="light"
+                title="System Architecture — Executive Overview Map"
+                showExportButton={false}
+              />
+            </div>
+
+            {/* Detailed Tier Chapters */}
+            {deconstructed.chapters.map((ch, idx) => (
+              <div key={ch.id} className="tier-chapter-plate">
+                <div className="tier-chapter-header">
+                  <span className="tier-chapter-title">📖 Chapter {idx + 1}: {ch.title}</span>
+                  <span className="tier-chapter-badge">Layer {idx + 1} Deep-Dive</span>
+                </div>
+                <div className="tier-chapter-subtitle" style={{ marginBottom: "0.75rem", fontSize: "8.5pt", color: "#64748b" }}>
+                  Dedicated Architecture Subgraph Plate · Rendered at 100% Vector Resolution
+                </div>
+                <RenderedMermaidPlate
+                  plateId={`${reactId}_ch_${idx}_print`}
+                  code={ch.code}
+                  theme="light"
+                  title={`Chapter ${idx + 1}: ${ch.title}`}
+                  showExportButton={false}
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <DiagramModal

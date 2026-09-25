@@ -671,6 +671,86 @@ html, body {
 }
 
 /* =========================================================================
+   ARCHITECTURE PLATES (APPROACH 1: SUBGRAPH DECONSTRUCTION)
+   ========================================================================= */
+
+.mermaid-deconstructed-print-suite {
+  display: none;
+}
+
+.architecture-plate-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  width: 100%;
+}
+
+.architecture-plate-card:hover {
+  border-color: var(--border-strong);
+}
+
+.plate-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.1rem;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.plate-title {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: var(--text-primary);
+}
+
+.plate-badge {
+  font-size: 0.7rem;
+  font-weight: 650;
+  color: var(--accent-primary);
+  background-color: var(--accent-glow);
+  padding: 2px 7px;
+  border-radius: 4px;
+  border: 1px solid var(--accent-primary);
+}
+
+.plate-subtitle {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.plate-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.plate-content {
+  padding: 1.25rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: auto;
+  background: var(--bg-primary);
+}
+
+.plate-svg-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.plate-svg-wrapper svg {
+  max-width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+/* =========================================================================
    PRINT / PDF EXPORT ENGINE (@media print)
    ========================================================================= */
 
@@ -853,6 +933,93 @@ html, body {
     margin: 0 auto !important;
     vertical-align: middle !important;
     overflow: visible !important;
+  }
+
+  /* Approach 1: Subgraph Deconstruction ("Executive Map + Detailed Tier Chapters") */
+  body.print-deconstruct-diagrams .mermaid-has-deconstruction > .mermaid-viewport,
+  body.print-deconstruct-diagrams .mermaid-has-deconstruction > .mermaid-chapters-screen-view {
+    display: none !important;
+  }
+
+  body.print-deconstruct-diagrams .mermaid-has-deconstruction > .mermaid-deconstructed-print-suite {
+    display: block !important;
+  }
+
+  body.print-deconstruct-diagrams .mermaid-has-deconstruction {
+    border: none !important;
+    background: transparent !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .executive-map-plate {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border: 1.5px solid #0284c7 !important;
+    border-radius: 8px !important;
+    padding: 1.25rem !important;
+    margin: 1.5rem 0 2rem 0 !important;
+    background: #ffffff !important;
+  }
+
+  .tier-chapter-plate {
+    break-before: page !important;
+    page-break-before: always !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border: 1px solid #cbd5e1 !important;
+    border-top: 3.5px solid #0284c7 !important;
+    border-radius: 8px !important;
+    padding: 1.25rem !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    background: #ffffff !important;
+  }
+
+  .tier-chapter-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: baseline !important;
+    margin-bottom: 0.6rem !important;
+    padding-bottom: 0.4rem !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .tier-chapter-title {
+    font-size: 13pt !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+  }
+
+  .tier-chapter-badge {
+    font-size: 8.5pt !important;
+    font-weight: 650 !important;
+    color: #0284c7 !important;
+    background: #eff6ff !important;
+    padding: 2px 8px !important;
+    border-radius: 4px !important;
+    border: 1px solid #bfdbfe !important;
+  }
+
+  .tier-chapter-plate .plate-header,
+  .executive-map-plate .plate-header {
+    display: none !important;
+  }
+
+  .tier-chapter-plate .plate-content,
+  .executive-map-plate .plate-content {
+    padding: 0.5rem 0 !important;
+    background: #ffffff !important;
+  }
+
+  .tier-chapter-plate svg,
+  .executive-map-plate svg {
+    max-width: 100% !important;
+    max-height: 220mm !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 auto !important;
   }
 
   /* 6. GitHub Alert Callouts in Print */
