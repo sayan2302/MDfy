@@ -1,49 +1,951 @@
+@import "katex/dist/katex.min.css";
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+
+  /* Light Theme Tokens */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-surface: rgba(255, 255, 255, 0.85);
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent-primary: #0284c7;
+  --accent-hover: #0369a1;
+  --accent-glow: rgba(2, 132, 199, 0.15);
+  --code-bg: #f8fafc;
+  --code-border: #e2e8f0;
+  --splitter-bg: #e2e8f0;
+  --splitter-hover: #0284c7;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --glass-border: rgba(226, 232, 240, 0.8);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+[data-theme="dark"] {
+  /* Obsidian Dark Theme Tokens */
+  --bg-primary: #0b0f17;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1f2937;
+  --bg-surface: rgba(17, 24, 39, 0.82);
+  --border-subtle: #1e293b;
+  --border-strong: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --accent-primary: #38bdf8;
+  --accent-hover: #7dd3fc;
+  --accent-glow: rgba(56, 189, 248, 0.2);
+  --code-bg: #0d121c;
+  --code-border: #1e293b;
+  --splitter-bg: #1e293b;
+  --splitter-hover: #38bdf8;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.6);
+  --glass-border: rgba(30, 41, 59, 0.7);
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* =========================================================================
+   APPLICATION WORKSPACE LAYOUT
+   ========================================================================= */
+
+.app-main {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+}
+
+.split-container {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+  position: relative;
+}
+
+.split-pane-preview {
+  height: 100%;
+  overflow: hidden;
+}
+
+.preview-pane {
+  height: 100%;
+  overflow-y: auto;
+  padding: 2.5rem 3rem;
+  background-color: var(--bg-primary);
+}
+
+/* =========================================================================
+   MARKDOWN DOCUMENT TYPOGRAPHY & ELEMENTS
+   ========================================================================= */
+
+.markdown-body {
+  font-family: var(--font-sans);
+  font-size: 15.5px;
+  line-height: 1.7;
+  color: var(--text-primary);
+  word-wrap: break-word;
+}
+
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4,
+.markdown-body h5,
+.markdown-body h6 {
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text-primary);
+  margin-top: 1.8em;
+  margin-bottom: 0.6em;
+  scroll-margin-top: 2rem;
+}
+
+.markdown-body h1 {
+  font-size: 2.15rem;
+  padding-bottom: 0.4em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.markdown-body h2 {
+  font-size: 1.6rem;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.markdown-body h3 {
+  font-size: 1.3rem;
+}
+
+.markdown-body h4 {
+  font-size: 1.1rem;
+}
+
+.markdown-body p {
+  margin-bottom: 1.1em;
+}
+
+.markdown-body strong {
+  font-weight: 650;
+}
+
+.markdown-body em {
+  font-style: italic;
+}
+
+.markdown-body a {
+  color: var(--accent-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+}
+
+.markdown-body a:hover {
+  color: var(--accent-hover);
+}
+
+.markdown-body hr {
+  height: 1px;
+  background-color: var(--border-subtle);
+  border: none;
+  margin: 2rem 0;
+}
+
+.markdown-body ul,
+.markdown-body ol {
+  margin-bottom: 1.2em;
+  padding-left: 1.75em;
+}
+
+.markdown-body li {
+  margin-bottom: 0.4em;
+}
+
+.markdown-body li::marker {
+  color: var(--accent-primary);
+}
+
+/* Inline Code */
+.markdown-body :not(pre) > code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Blockquotes */
+.markdown-body blockquote {
+  margin: 1.2em 0;
+  padding: 0.8em 1.2em;
+  color: var(--text-secondary);
+  border-left: 4px solid var(--accent-primary);
+  background-color: var(--bg-secondary);
+  border-radius: 0 8px 8px 0;
+}
+
+/* Tables */
+.table-wrapper {
+  overflow-x: auto;
+  margin: 1.5em 0;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+}
+
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.markdown-body th {
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: 650;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+.markdown-body td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.markdown-body tr:last-child td {
+  border-bottom: none;
+}
+
+.markdown-body tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] .markdown-body tr:nth-child(even) td {
+  background-color: #fafbfc;
+}
+
+/* Task Lists */
+.markdown-body .task-list-item {
+  list-style-type: none;
+  margin-left: -1.3em;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.markdown-body .task-list-item input[type="checkbox"] {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 4px;
+  outline: none;
+  background-color: var(--bg-secondary);
+  position: relative;
+  top: 2px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.markdown-body .task-list-item input[type="checkbox"]:checked {
+  background-color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+.markdown-body .task-list-item input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* =========================================================================
+   GITHUB ALERT CALLOUTS
+   ========================================================================= */
+
+.callout {
+  margin: 1.25rem 0;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  border-left: 4px solid;
+  background-color: var(--bg-secondary);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s ease;
+}
+
+.callout-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.callout-body {
+  font-size: 0.93rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.callout-body > p:last-child {
+  margin-bottom: 0;
+}
+
+.callout-note {
+  border-left-color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.08);
+}
+.callout-note .callout-header {
+  color: #3b82f6;
+}
+
+.callout-tip {
+  border-left-color: #10b981;
+  background-color: rgba(16, 185, 129, 0.08);
+}
+.callout-tip .callout-header {
+  color: #10b981;
+}
+
+.callout-important {
+  border-left-color: #a855f7;
+  background-color: rgba(168, 85, 247, 0.08);
+}
+.callout-important .callout-header {
+  color: #a855f7;
+}
+
+.callout-warning {
+  border-left-color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.08);
+}
+.callout-warning .callout-header {
+  color: #f59e0b;
+}
+
+.callout-caution {
+  border-left-color: #ef4444;
+  background-color: rgba(239, 68, 68, 0.08);
+}
+.callout-caution .callout-header {
+  color: #ef4444;
+}
+
+/* =========================================================================
+   MERMAID DIAGRAM WRAPPER & CONTROLS
+   ========================================================================= */
+
+.mermaid-wrapper {
+  position: relative;
+  margin: 1.75rem 0;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-secondary);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mermaid-wrapper:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.mermaid-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.9rem;
+  background-color: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.mermaid-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-primary);
+}
+
+.mermaid-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.diagram-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem 0.55rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.diagram-btn:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.mermaid-viewport {
+  position: relative;
+  width: 100%;
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow: hidden;
+  user-select: none;
+}
+
+.mermaid-viewport svg {
+  max-width: 100%;
+  height: auto;
+  transition: transform 0.1s ease-out;
+}
+
+/* Floating Diagram Control Pill */
+.floating-controls {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--bg-surface);
+  backdrop-filter: blur(10px);
+  padding: 0.3rem 0.4rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+  opacity: 0.85;
+  transition: opacity 0.2s ease;
+}
+
+.floating-controls:hover {
+  opacity: 1;
+}
+
+.ctrl-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.ctrl-btn:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--accent-primary);
+}
+
+/* Diagram Error Overlay */
+.diagram-error {
+  padding: 1.25rem;
+  background-color: rgba(239, 68, 68, 0.08);
+  border: 1px dashed #ef4444;
+  border-radius: 8px;
+  color: #ef4444;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.diagram-error-title {
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* =========================================================================
+   SYNTAX HIGHLIGHTING & CODE BLOCKS
+   ========================================================================= */
+
+.code-block-wrapper {
+  position: relative;
+  margin: 1.5rem 0;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--code-bg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.code-lang {
+  text-transform: uppercase;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  color: var(--accent-primary);
+}
+
+.copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 5px;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.copy-btn:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.code-pre {
+  margin: 0;
+  padding: 1.1rem 1.25rem;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+/* Prism Color Tokens */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #64748b;
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: #94a3b8;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #f43f5e;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #10b981;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #38bdf8;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #818cf8;
+  font-weight: 600;
+}
+
+.token.function,
+.token.class-name {
+  color: #38bdf8;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #fbbf24;
+}
+
+/* =========================================================================
+   KATEX MATH
+   ========================================================================= */
+
+.katex-display {
+  margin: 1.5rem 0 !important;
+  padding: 1rem !important;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* =========================================================================
+   PRINT / PDF EXPORT ENGINE (@media print)
+   ========================================================================= */
+
+@media print {
+  @page {
+    margin: var(--print-page-margin, 8mm);
+    size: auto;
+  }
+
+  /* 1. Complete Reset of Ancestor Containers: Removes all height limits and overflow clipping */
+  html,
+  body,
+  .app-main,
+  .split-container,
+  .split-pane-preview {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    float: none !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  .preview-pane {
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    float: none !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  /* 2. Hide All UI Toolbars, Splitters, Buttons, and Non-Document Elements */
+  .no-print,
+  .app-header,
+  .split-pane-editor,
+  .split-resizer,
+  .status-bar,
+  .mermaid-header-bar,
+  .floating-controls,
+  .copy-btn,
+  .diagram-btn,
+  .diagram-actions,
+  .fullscreen-btn {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* 3. Document Canvas Typography & Layout */
+  .markdown-body {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: var(--print-font-size, 8.5pt) !important;
+    line-height: 1.5 !important;
+    color: #0f172a !important;
+    padding: 0 !important;
+  }
+
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+    color: #0f172a !important;
+  }
+
+  .markdown-body h1 {
+    font-size: 16pt !important;
+    margin-top: 0.9rem !important;
+    margin-bottom: 0.35rem !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+  }
+
+  .markdown-body h2 {
+    font-size: 13pt !important;
+    margin-top: 0.75rem !important;
+    margin-bottom: 0.3rem !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+  }
+
+  .markdown-body h3 {
+    font-size: 11pt !important;
+    margin-top: 0.65rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .markdown-body p {
+    margin-bottom: 0.6em !important;
+    color: #1e293b !important;
+    orphans: 3;
+    widows: 3;
+  }
+
+  .markdown-body ul,
+  .markdown-body ol {
+    margin-bottom: 0.6em !important;
+    color: #1e293b !important;
+  }
+
+  .markdown-body li {
+    margin-bottom: 0.2em !important;
+  }
+
+  .markdown-body a {
+    color: #0284c7 !important;
+    text-decoration: underline !important;
+  }
+
+  .markdown-body hr {
+    margin: 0.85rem 0 !important;
+    border-top: 1px solid #cbd5e1 !important;
+  }
+
+  /* 4. Page Break Controls for Components */
+  .mermaid-wrapper,
+  .code-block-wrapper,
+  .callout,
+  .table-wrapper,
+  blockquote,
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    box-shadow: none !important;
+  }
+
+  /* 5. Mermaid Diagrams in Print */
+  .mermaid-wrapper {
+    border: 1px solid #cbd5e1 !important;
+    background-color: #ffffff !important;
+    margin: 1.25rem 0 !important;
+    border-radius: 8px !important;
+    overflow: visible !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
+  }
+
+  [data-theme="dark"] .mermaid-wrapper {
+    background-color: #111827 !important;
+  }
+
+  .mermaid-viewport {
+    padding: 0.85rem !important;
+    min-height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+    text-align: center !important;
+  }
+
+  .mermaid-viewport > div {
+    transform: none !important;
+    width: 100% !important;
+    max-width: calc(100% * var(--print-diagram-scale, 1.0)) !important;
+    margin: 0 auto !important;
+    display: block !important;
+    text-align: center !important;
+  }
+
+  .mermaid-viewport svg {
+    display: inline-block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: var(--print-diagram-max-height, none) !important;
+    height: auto !important;
+    margin: 0 auto !important;
+    vertical-align: middle !important;
+    overflow: visible !important;
+  }
+
+  /* 6. GitHub Alert Callouts in Print */
+  .callout {
+    margin: 1rem 0 !important;
+    padding: 0.85rem 1.1rem !important;
+    border-radius: 6px !important;
+    border-left-width: 4px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+  .callout-note {
+    border-left-color: #2563eb !important;
+    background-color: #eff6ff !important;
+  }
+  .callout-note .callout-header { color: #2563eb !important; }
+
+  .callout-tip {
+    border-left-color: #059669 !important;
+    background-color: #ecfdf5 !important;
+  }
+  .callout-tip .callout-header { color: #059669 !important; }
+
+  .callout-important {
+    border-left-color: #7c3aed !important;
+    background-color: #f5f3ff !important;
+  }
+  .callout-important .callout-header { color: #7c3aed !important; }
+
+  .callout-warning {
+    border-left-color: #d97706 !important;
+    background-color: #fffbeb !important;
+  }
+  .callout-warning .callout-header { color: #d97706 !important; }
+
+  .callout-caution {
+    border-left-color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+  }
+  .callout-caution .callout-header { color: #dc2626 !important; }
+
+  /* 7. Code Blocks in Print */
+  .code-block-wrapper {
+    margin: 1.25rem 0 !important;
+    border: 1px solid #cbd5e1 !important;
+    background-color: #f8fafc !important;
+    border-radius: 8px !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .code-header {
+    background-color: #f1f5f9 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    color: #475569 !important;
+    padding: 0.4rem 0.85rem !important;
+  }
+
+  .code-pre {
+    padding: 0.85rem 1rem !important;
+    font-size: 9.5pt !important;
+    line-height: 1.5 !important;
+    color: #0f172a !important;
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
+  }
+
+  /* 8. Tables in Print */
+  .table-wrapper {
+    margin: 1.25rem 0 !important;
+    border: 1px solid #cbd5e1 !important;
+    overflow: visible !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .markdown-body th {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    font-weight: 700 !important;
+    border-bottom: 2px solid #94a3b8 !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  .markdown-body td {
+    border-bottom: 1px solid #e2e8f0 !important;
+    color: #1e293b !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  /* 9. Force Print Colors and Contrast */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }
