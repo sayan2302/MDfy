@@ -1,122 +1,22 @@
 "use client";
 
 /**
- * Utility to export a Mermaid diagram as a standalone, custom-sized Architecture Blueprint PDF.
- * Uses jsPDF and svg2pdf.js for client-side vector PDF generation that matches the diagram's
- * exact intrinsic dimensions (no A4 squeezing, no micro-fonts, zero clipping).
+ * High-fidelity Architecture Blueprint PDF Exporter.
+ * Uses native browser print engine configured with @page { size: A3 landscape }
+ * to render complete SVGs including all foreignObject HTML text, fonts, colors,
+ * and badges on a spacious 420mm x 297mm A3 canvas with zero clipping or text loss.
  */
 
-export async function exportDiagramToPdf(
+export function exportDiagramToPdf(
   svgHtml: string,
-  diagramTitle = "architecture-blueprint"
-): Promise<void> {
+  diagramTitle = "architecture-blueprint",
+  paperFormat: "A3 landscape" | "A3 portrait" | "A4 landscape" = "A3 landscape"
+): void {
   if (typeof window === "undefined") return;
 
-  const parser = new DOMParser();
-  const docParsed = parser.parseFromString(svgHtml, "image/svg+xml");
-  const svgEl = docParsed.querySelector("svg");
-  if (!svgEl) {
-    throw new Error("No SVG element found in the provided HTML");
-  }
-
-  // Calculate intrinsic dimensions from viewBox or attributes
-  let width = 1200;
-  let height = 800;
-  const viewBox = svgEl.getAttribute("viewBox");
-  if (viewBox) {
-    const parts = viewBox.trim().split(/[\s,]+/).map(Number);
-    if (parts.length === 4 && parts[2] > 0 && parts[3] > 0) {
-      width = parts[2];
-      height = parts[3];
-    }
-  } else {
-    width = parseFloat(svgEl.getAttribute("width") || "1200") || 1200;
-    height = parseFloat(svgEl.getAttribute("height") || "800") || 800;
-  }
-
-  // Add blueprint padding around the diagram
-  const padding = 36; // 36pt (~0.5 in)
-  const pageWidth = Math.ceil(width + padding * 2);
-  const pageHeight = Math.ceil(height + padding * 2);
-
-  // Set explicit width and height on SVG
-  svgEl.setAttribute("width", `${width}`);
-  svgEl.setAttribute("height", `${height}`);
-  svgEl.style.width = `${width}px`;
-  svgEl.style.height = `${height}px`;
-  svgEl.style.maxWidth = "none";
-  svgEl.style.maxHeight = "none";
-
-  // Temporary DOM container so svg2pdf can compute styles
-  const tempContainer = document.createElement("div");
-  tempContainer.style.position = "fixed";
-  tempContainer.style.left = "-99999px";
-  tempContainer.style.top = "-99999px";
-  tempContainer.style.width = `${pageWidth}px`;
-  tempContainer.style.height = `${pageHeight}px`;
-  tempContainer.style.visibility = "hidden";
-  tempContainer.style.zIndex = "-1";
-  tempContainer.appendChild(svgEl);
-  document.body.appendChild(tempContainer);
-
-  try {
-    const { jsPDF } = await import("jspdf");
-    await import("svg2pdf.js");
-
-    const pdf = new jsPDF({
-      orientation: pageWidth >= pageHeight ? "landscape" : "portrait",
-      unit: "pt",
-      format: [pageWidth, pageHeight],
-      compress: true,
-    });
-
-    // Theme-aware blueprint background
-    const isLight = document.documentElement.getAttribute("data-theme") === "light";
-    if (isLight) {
-      pdf.setFillColor(255, 255, 255);
-    } else {
-      pdf.setFillColor(11, 15, 23); // Obsidian dark
-    }
-    pdf.rect(0, 0, pageWidth, pageHeight, "F");
-
-    // Render pure vector SVG directly into PDF
-    await pdf.svg(svgEl, {
-      x: padding,
-      y: padding,
-      width: width,
-      height: height,
-    });
-
-    const safeTitle = diagramTitle
-      .toLowerCase()
-      .replace(/[^a-z0-9_-]/g, "_")
-      .replace(/_+/g, "_")
-      .slice(0, 40) || "diagram";
-
-    pdf.save(`${safeTitle}-blueprint.pdf`);
-  } catch (err) {
-    console.warn("Direct vector pdf conversion had a warning, trying fallback renderer:", err);
-    openIsolatedBlueprintWindow(svgHtml, width, height, diagramTitle);
-  } finally {
-    if (tempContainer.parentNode) {
-      tempContainer.parentNode.removeChild(tempContainer);
-    }
-  }
-}
-
-/**
- * Fallback: Opens a standalone, isolated blueprint window matching the diagram's exact size,
- * styled with @page { size: custom } and triggers print-to-PDF.
- */
-function openIsolatedBlueprintWindow(
-  svgHtml: string,
-  width: number,
-  height: number,
-  title: string
-): void {
   const printWindow = window.open("", "_blank");
   if (!printWindow) {
-    alert("Popup blocked. Please allow popups to export the Blueprint PDF.");
+    alert("Popup blocked by browser. Please allow popups for localhost to export Blueprint PDF.");
     return;
   }
 
@@ -126,44 +26,67 @@ function openIsolatedBlueprintWindow(
 
   printWindow.document.write(`
     <!DOCTYPE html>
-    <html>
+    <html lang="en">
       <head>
-        <title>${title} - Blueprint PDF</title>
+        <meta charset="utf-8" />
+        <title>${diagramTitle} - Architecture Blueprint</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
         <style>
           @page {
-            size: ${width + 80}px ${height + 80}px;
-            margin: 40px;
+            size: ${paperFormat};
+            margin: 10mm;
           }
           * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          body {
-            background-color: ${bgColor};
-            color: ${fgColor};
+          html, body {
+            width: 100%;
+            height: 100%;
+            background-color: ${bgColor} !important;
+            color: ${fgColor} !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .blueprint-container {
+            width: 100%;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 100%;
-            height: 100%;
+            padding: 6mm;
           }
           svg {
-            display: block;
-            width: ${width}px !important;
-            height: ${height}px !important;
-            max-width: none !important;
-            max-height: none !important;
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            height: auto !important;
+            max-height: 100% !important;
+            margin: auto !important;
+            overflow: visible !important;
+          }
+          foreignObject div {
+            font-family: 'Inter', system-ui, sans-serif !important;
+            color: inherit;
           }
         </style>
       </head>
       <body>
-        ${svgHtml}
+        <div class="blueprint-container">
+          ${svgHtml}
+        </div>
         <script>
           window.onload = function() {
             setTimeout(function() {
+              window.focus();
               window.print();
-            }, 100);
+            }, 300);
           };
         </script>
       </body>

@@ -114,6 +114,12 @@ export default function Home() {
       normal: "12mm",
       none: "0mm",
     };
+    const paperSizeMap: Record<string, string> = {
+      "a3-landscape": "A3 landscape",
+      "a3-portrait": "A3 portrait",
+      "a4-landscape": "A4 landscape",
+      "a4-portrait": "A4 portrait",
+    };
 
     const rootStyle = document.documentElement.style;
     rootStyle.setProperty("--print-font-size", fontSizeMap[settings.fontSize]);
@@ -121,7 +127,22 @@ export default function Home() {
     rootStyle.setProperty("--print-diagram-max-height", diagramHeightMap[settings.diagramScale]);
     rootStyle.setProperty("--print-page-margin", marginMap[settings.margin]);
 
-    // Give browser a frame to commit CSS variables, then open print dialog
+    // Dynamically inject @page size rule into head before window.print
+    let printStyleEl = document.getElementById("mdfy-print-page-style") as HTMLStyleElement | null;
+    if (!printStyleEl) {
+      printStyleEl = document.createElement("style");
+      printStyleEl.id = "mdfy-print-page-style";
+      document.head.appendChild(printStyleEl);
+    }
+    const chosenSize = paperSizeMap[settings.paperSize] || "A3 landscape";
+    printStyleEl.textContent = `
+      @page {
+        size: ${chosenSize} !important;
+        margin: ${marginMap[settings.margin]} !important;
+      }
+    `;
+
+    // Give browser a frame to commit CSS variables and @page style, then open print dialog
     requestAnimationFrame(() => {
       setTimeout(() => {
         window.print();

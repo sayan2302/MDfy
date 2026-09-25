@@ -7,6 +7,7 @@ export interface PrintSettings {
   fontSize: "compact" | "normal" | "comfortable";
   diagramScale: "compact" | "medium" | "full";
   margin: "slim" | "normal" | "none";
+  paperSize: "a3-landscape" | "a3-portrait" | "a4-landscape" | "a4-portrait";
 }
 
 interface PrintSettingsModalProps {
@@ -24,6 +25,7 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
     fontSize: "compact",
     diagramScale: "full",
     margin: "slim",
+    paperSize: "a3-landscape",
   });
 
   if (!isOpen) return null;
@@ -239,6 +241,52 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
                   }}
                 >
                   <div style={{ fontWeight: 600, fontSize: "0.82rem" }}>{opt.label}</div>
+                  <div style={{ fontSize: "0.68rem", opacity: 0.75, marginTop: "2px" }}>{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Option 4: Sheet / Paper Format */}
+          <div>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.45rem",
+                fontSize: "0.85rem",
+                fontWeight: 650,
+                color: "var(--text-primary)",
+                marginBottom: "0.6rem",
+              }}
+            >
+              <Sliders size={15} style={{ color: "var(--accent-primary)" }} />
+              <span>Sheet Format (A3 vs A4)</span>
+            </label>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
+              {[
+                { id: "a3-landscape", label: "A3 Landscape (Recommended)", desc: "420×297mm · 2x Blueprint area · Huge diagrams" },
+                { id: "a3-portrait", label: "A3 Portrait", desc: "297×420mm · Tall architecture schematics" },
+                { id: "a4-landscape", label: "A4 Landscape", desc: "297×210mm · Wide standard documents" },
+                { id: "a4-portrait", label: "A4 Portrait", desc: "210×297mm · Standard portrait office page" },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setSettings((s) => ({ ...s, paperSize: opt.id as PrintSettings["paperSize"] }))}
+                  style={{
+                    padding: "0.6rem 0.5rem",
+                    borderRadius: "8px",
+                    border: `1.5px solid ${settings.paperSize === opt.id ? "var(--accent-primary)" : "var(--border-subtle)"}`,
+                    background: settings.paperSize === opt.id ? "var(--accent-glow)" : "var(--bg-primary)",
+                    color: settings.paperSize === opt.id ? "var(--accent-primary)" : "var(--text-primary)",
+                    cursor: "pointer",
+                    textAlign: "left",
+                    transition: "all 0.15s ease",
+                  }}
+                >
+                  <div style={{ fontWeight: 650, fontSize: "0.82rem" }}>{opt.label}</div>
                   <div style={{ fontSize: "0.68rem", opacity: 0.75, marginTop: "2px" }}>{opt.desc}</div>
                 </button>
               ))}
