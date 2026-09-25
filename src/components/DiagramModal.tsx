@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { X, ZoomIn, ZoomOut, RotateCcw, Maximize, Download, Image as ImageIcon } from "lucide-react";
+import { X, ZoomIn, ZoomOut, RotateCcw, Maximize, Download, Image as ImageIcon, FileText } from "lucide-react";
+import { exportDiagramToPdf } from "@/utils/exportDiagramPdf";
 
 interface DiagramModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const scaleRef = useRef(scale);
   scaleRef.current = scale;
@@ -254,6 +256,17 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
     img.src = url;
   };
 
+  const handleDownloadPdf = async () => {
+    try {
+      setIsExportingPdf(true);
+      await exportDiagramToPdf(svgHtml, diagramTitle);
+    } catch (err) {
+      console.error("PDF Blueprint export failed:", err);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   return (
     <div
       style={{
@@ -324,6 +337,21 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
           </button>
           <button className="diagram-btn" onClick={handleDownloadPng} title="Export 3x High-Res PNG">
             <ImageIcon size={14} style={{ marginRight: 4 }} /> PNG
+          </button>
+          <button
+            className="diagram-btn"
+            onClick={handleDownloadPdf}
+            disabled={isExportingPdf}
+            title="Export as Standalone Vector Blueprint PDF (Custom Size, No A4 Squeezing)"
+            style={{
+              background: "var(--accent-glow)",
+              color: "var(--accent-primary)",
+              borderColor: "var(--accent-primary)",
+              fontWeight: 650,
+            }}
+          >
+            <FileText size={14} style={{ marginRight: 4 }} />
+            {isExportingPdf ? "Generating PDF..." : "PDF Blueprint"}
           </button>
           <button
             onClick={onClose}

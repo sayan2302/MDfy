@@ -2,8 +2,9 @@
 
 import React, { useEffect, useRef, useState, useId } from "react";
 import mermaid from "mermaid";
-import { Maximize2, ZoomIn, ZoomOut, RotateCcw, Download, AlertTriangle, Image as ImageIcon } from "lucide-react";
+import { Maximize2, ZoomIn, ZoomOut, RotateCcw, Download, AlertTriangle, Image as ImageIcon, FileText } from "lucide-react";
 import { DiagramModal } from "./DiagramModal";
+import { exportDiagramToPdf } from "@/utils/exportDiagramPdf";
 
 interface MermaidBlockProps {
   chart: string;
@@ -20,6 +21,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [showCtrlHint, setShowCtrlHint] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
   const hintTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scaleRef = useRef(scale);
@@ -209,6 +211,17 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
     img.src = url;
   };
 
+  const handleDownloadPdf = async () => {
+    try {
+      setIsExportingPdf(true);
+      await exportDiagramToPdf(svgHtml, "mermaid-architecture");
+    } catch (err) {
+      console.error("PDF export failed:", err);
+    } finally {
+      setIsExportingPdf(false);
+    }
+  };
+
   if (error) {
     return (
       <div className="mermaid-wrapper">
@@ -239,12 +252,24 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
             </button>
             <button
               className="diagram-btn"
-              onClick={() => setIsModalOpen(true)}
-              title="Open Infinite Canvas Studio"
+              onClick={handleDownloadPdf}
+              disabled={isExportingPdf}
+              title="Export as Standalone Vector Blueprint PDF (Custom Size, No A4 Squeezing)"
               style={{
                 background: "var(--accent-glow)",
                 borderColor: "var(--accent-primary)",
                 color: "var(--accent-primary)",
+                fontWeight: 650,
+              }}
+            >
+              <FileText size={13} style={{ marginRight: 4 }} /> {isExportingPdf ? "PDF..." : "PDF Blueprint"}
+            </button>
+            <button
+              className="diagram-btn"
+              onClick={() => setIsModalOpen(true)}
+              title="Open Infinite Canvas Studio"
+              style={{
+                background: "var(--bg-primary)",
                 fontWeight: 600,
               }}
             >

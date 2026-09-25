@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@panzoom/panzoom": "^4.6.2",
+    "jspdf": "^4.2.1",
     "katex": "^0.18.9",
     "lucide-react": "^1.48.0",
     "mermaid": "^11.17.2",
@@ -20,7 +21,8 @@
     "react-markdown": "^10.1.0",
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
-    "remark-math": "^6.0.0"
+    "remark-math": "^6.0.0",
+    "svg2pdf.js": "^2.8.1"
   },
   "devDependencies": {
     "@types/katex": "^0.16.8",

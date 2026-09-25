@@ -262,7 +262,7 @@ export const PrintSettingsModal: React.FC<PrintSettingsModalProps> = ({
           >
             <Info size={16} style={{ color: "var(--accent-primary)", flexShrink: 0, marginTop: "2px" }} />
             <div>
-              <strong style={{ color: "var(--text-primary)" }}>Continuous Page Flow Tip:</strong> In the Chrome/Edge print dialog, ensure <strong style={{ color: "var(--accent-primary)" }}>Headers and footers</strong> is unchecked to remove URL & page numbers.
+              <strong style={{ color: "var(--text-primary)" }}>Architecture Blueprint Tip:</strong> To export massive multi-tier Mermaid diagrams at 100% natural scale with zero A4 clipping or squishing, use the <strong style={{ color: "var(--accent-primary)" }}>PDF Blueprint</strong> button directly on any diagram toolbar.
             </div>
           </div>
         </div>
