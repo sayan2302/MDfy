@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { X, ZoomIn, ZoomOut, RotateCcw, Maximize, Download, Image as ImageIcon, FileText } from "lucide-react";
+import { X, ZoomIn, ZoomOut, RotateCcw, Maximize, Download, Image as ImageIcon, FileText, Globe } from "lucide-react";
 import { exportDiagramToPdf } from "@/utils/exportDiagramPdf";
+import { exportDiagramToHtml } from "@/utils/exportDiagramHtml";
 
 interface DiagramModalProps {
   isOpen: boolean;
@@ -267,6 +268,15 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
     }
   };
 
+  const handleDownloadHtml = () => {
+    try {
+      const isLight = document.documentElement.getAttribute("data-theme") === "light";
+      exportDiagramToHtml(svgHtml, diagramTitle, isLight ? "light" : "dark");
+    } catch (err) {
+      console.error("HTML Canvas export failed:", err);
+    }
+  };
+
   return (
     <div
       style={{
@@ -352,6 +362,19 @@ export const DiagramModal: React.FC<DiagramModalProps> = ({
           >
             <FileText size={14} style={{ marginRight: 4 }} />
             {isExportingPdf ? "Generating PDF..." : "PDF Blueprint"}
+          </button>
+          <button
+            className="diagram-btn"
+            onClick={handleDownloadHtml}
+            title="Export as Standalone Interactive HTML Canvas (Zero Dependencies, Offline Pan, Zoom & Search)"
+            style={{
+              background: "rgba(14, 165, 233, 0.12)",
+              color: "var(--accent-primary)",
+              borderColor: "rgba(14, 165, 233, 0.4)",
+              fontWeight: 650,
+            }}
+          >
+            <Globe size={14} style={{ marginRight: 4 }} /> HTML Canvas
           </button>
           <button
             onClick={onClose}

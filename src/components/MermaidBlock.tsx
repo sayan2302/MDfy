@@ -13,9 +13,11 @@ import {
   FileText,
   Layers,
   BookOpen,
+  Globe,
 } from "lucide-react";
 import { DiagramModal } from "./DiagramModal";
 import { exportDiagramToPdf } from "@/utils/exportDiagramPdf";
+import { exportDiagramToHtml } from "@/utils/exportDiagramHtml";
 import { deconstructMermaid } from "@/utils/deconstructMermaid";
 import { RenderedMermaidPlate } from "./RenderedMermaidPlate";
 
@@ -239,6 +241,14 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
     }
   };
 
+  const handleDownloadHtml = () => {
+    try {
+      exportDiagramToHtml(svgHtml, "mermaid-architecture", theme === "light" ? "light" : "dark");
+    } catch (err) {
+      console.error("HTML Canvas export failed:", err);
+    }
+  };
+
   if (error) {
     return (
       <div className="mermaid-wrapper">
@@ -341,6 +351,19 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, theme }) => {
               }}
             >
               <FileText size={13} style={{ marginRight: 4 }} /> {isExportingPdf ? "PDF..." : "PDF Blueprint"}
+            </button>
+            <button
+              className="diagram-btn"
+              onClick={handleDownloadHtml}
+              title="Export as Standalone Interactive HTML Canvas (Zero Dependencies, Offline Pan, Zoom & Search)"
+              style={{
+                background: "rgba(14, 165, 233, 0.12)",
+                borderColor: "rgba(14, 165, 233, 0.4)",
+                color: "var(--accent-primary)",
+                fontWeight: 650,
+              }}
+            >
+              <Globe size={13} style={{ marginRight: 4 }} /> HTML Canvas
             </button>
             <button
               className="diagram-btn"
